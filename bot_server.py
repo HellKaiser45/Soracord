@@ -28,16 +28,40 @@ async def on_ready():
 # --- BASIC COMMANDS ---
 
 
-# A simple text command. Usage: !ping
 @bot.command()
-async def ping(ctx):
-    await ctx.send(f"Pong! {disk()}")
+async def health(ctx):
+    cpu_usage = cpu()
+    disk_usage = disk()
+    ram_usage = ram()
 
+    embed = discord.Embed(
+        title="🖥️ Server Health",
+        description="Current VPS metrics",
+        color=discord.Color.green()
+        if cpu_usage.usage_percent < 80
+        else discord.Color.red(),
+        timestamp=discord.utils.utcnow(),
+    )
 
-# A command with an argument. Usage: !echo Hello World
-@bot.command()
-async def echo(ctx, *, message):
-    await ctx.send(message)
+    embed.add_field(
+        name="💻 CPU Usage", value=f"`{cpu_usage.usage_percent:.1f}%`", inline=True
+    )
+
+    embed.add_field(
+        name="🧠 RAM",
+        value=f"`{ram_usage.used:.1f}` / `{ram_usage.total:.1f}` GB",
+        inline=True,
+    )
+
+    embed.add_field(
+        name="💾 Disk",
+        value=f"`{disk_usage.used:.1f}` / `{disk_usage.total:.1f}` GB",
+        inline=True,
+    )
+
+    embed.set_footer(text="Last updated")
+
+    await ctx.send(embed=embed)
 
 
 # 3. Run the bot
