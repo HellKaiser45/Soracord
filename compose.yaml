@@ -1,0 +1,7 @@
+services:
+  soracord:
+    build: .
+    container_name: soracord-bot
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
