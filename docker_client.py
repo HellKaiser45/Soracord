@@ -62,7 +62,10 @@ class DockerMonitor:
         cpu_delta = (
             cpu_stats["cpu_usage"]["total_usage"] - precpu["cpu_usage"]["total_usage"]
         )
-        system_delta = cpu_stats["system_cpu_usage"] - precpu["system_cpu_usage"]
+        try:
+            system_delta = cpu_stats["system_cpu_usage"] - precpu["system_cpu_usage"]
+        except Exception:
+            system_delta = 0.0
         online_cpus = cpu_stats.get("online_cpus", 1)
 
         cpu_pct = 0.0
@@ -102,9 +105,6 @@ class DockerMonitor:
                 disk_write_mb=round(write_b / (1024**2), 1),
             ),
         )
-
-
-# TODO: Add an event stream as an alert system
 
 
 if __name__ == "__main__":

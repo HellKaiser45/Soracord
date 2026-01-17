@@ -1,0 +1,17 @@
+services:
+  stress-test:
+    image: polinux/stress
+    container_name: stress-test
+    command: stress --cpu 2 --vm 1 --vm-bytes 256M --timeout 300s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "false"]  # Always fails = unhealthy
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
+    restart: unless-stopped
