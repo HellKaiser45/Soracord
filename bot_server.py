@@ -9,15 +9,13 @@ from docker_client import DockerMonitor
 
 load_dotenv()
 Discord_Token = os.getenv("BOT_TOKEN")
+Server_Name = os.getenv("SERVER_NAME") or "My server"
 
-# Persistent instance: Connect once, use everywhere
 monitor = DockerMonitor()
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="!soracord ", intents=intents, help_command=None)
-
-# TODO: Add an environment variable for the server name (so we can know wich server the metrics are coming from)
+bot = commands.Bot(command_prefix="!soracord ", intents=intents)
 
 
 # --- Structure ---
@@ -37,7 +35,7 @@ class Alert:
                 "dead" or "restarting"
             ):
                 embed = discord.Embed(
-                    title="🔴 Unhealthy",
+                    title=f"{Server_Name}: Unhealthy",
                     description=f"Container `{container.name}` is unhealthy.",
                     color=discord.Color.red(),
                 )
@@ -113,12 +111,18 @@ async def on_ready():
 
 
 @bot.command()
-async def health(ctx):
+async def health(
+    ctx,
+    server: str | None = commands.parameter(
+        default=None, description=": The name of the server to check health"
+    ),
+):
     """General VPS health overview."""
+
     c, r, d = cpu(), ram(), disk()
 
     embed = discord.Embed(
-        title="🖥️ Server Health Report",
+        title=f"🖥️ Server {Server_Name}: Health Report",
         color=discord.Color.blue(),
         timestamp=discord.utils.utcnow(),
     )
@@ -132,19 +136,26 @@ async def health(ctx):
     embed.add_field(
         name="Disk Space", value=f"📂 `{d.used:.1f} / {d.total:.1f} GB`", inline=True
     )
-
-    await ctx.send(embed=embed)
+    if not server or server == Server_Name:
+        await ctx.send(embed=embed)
+    else:
+        pass
 
 
 @bot.command()
-async def docker(ctx):
+async def docker(
+    ctx,
+    server: str | None = commands.parameter(
+        default=None, description=": The name of the server to check health"
+    ),
+):
     """List all containers with status emojis."""
     containers = (
         monitor.check_containers()
     )  # Assuming this returns a list of dataclasses
 
     embed = discord.Embed(
-        title="🐳 Docker Infrastructure",
+        title=f"🐳 Docker {Server_Name} Infrastructure",
         description=f"Monitoring **{len(containers)}** containers.",
         color=discord.Color.dark_grey(),
     )
@@ -155,16 +166,26 @@ async def docker(ctx):
         status_list.append(f"{emoji} **{c.name}** \u2014 `{c.status}`")
 
     embed.description = "\n".join(status_list)
-    await ctx.send(embed=embed)
+
+    if not server or server == Server_Name:
+        await ctx.send(embed=embed)
+    else:
+        pass
 
 
 @bot.command()
-async def container(ctx, name: str):
+async def container(
+    ctx,
+    name: str = commands.parameter(description=": The name of the container"),
+    server: str | None = commands.parameter(
+        default=None, description=": The name of the server to check health"
+    ),
+):
     """Detailed metrics for a specific container."""
     stats = monitor.get_metrics(name)
 
     if not stats:
-        return await ctx.send(f"❌ Container `{name}` not found.")
+        return
 
     embed = discord.Embed(title=f"📦 Details: {name}", color=discord.Color.blue())
 
@@ -184,22 +205,37 @@ async def container(ctx, name: str):
         inline=False,
     )
 
-    await ctx.send(embed=embed)
+    if not server or server == Server_Name:
+        await ctx.send(embed=embed)
+    else:
+        pass
 
 
 @bot.command()
-async def logs(ctx, name: str, lines: int = 15):
+async def logs(
+    ctx,
+    name: str = commands.parameter(description=": The name of the container"),
+    lines: int = commands.parameter(
+        default=15, description=": The number of lines of logs to retreive"
+    ),
+    server: str | None = commands.parameter(
+        default=None, description=": The name of the server to check health"
+    ),
+):
     """Fetch recent logs in a clean code block."""
     raw_logs = monitor.container_logs(name, lines=lines)
 
     if not raw_logs:
-        return await ctx.send("No logs found.")
+        return
 
-    # Truncate if logs are too long for Discord (2000 char limit)
     if len(raw_logs) > 1900:
         raw_logs = raw_logs[-1900:]
-
-    await ctx.send(f"📋 **Last {lines} lines for `{name}`:**\n```text\n{raw_logs}\n```")
+    if not server or server == Server_Name:
+        await ctx.send(
+            f"📋 **Last {lines} lines for `{name}`:**\n```text\n{raw_logs}\n```"
+        )
+    else:
+        pass
 
 
 bot.run(Discord_Token)

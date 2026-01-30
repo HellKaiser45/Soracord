@@ -51,10 +51,12 @@ docker compose up -d --build
 
 ## 🎮 Commands
 
-The default prefix is `!`.
+The default prefix is `!soracord`.
 
 | Command | Description |
 | --- | --- |
+  !soracord help | Shows a list of all commands.|
+| !soracord help [command] | Shows detailed help for a specific command.|
 | `!soracord health` | Shows VPS CPU usage, RAM, and Disk space with visual progress bars. |
 | `!soracord docker` | Lists all containers, their current status, and healthcheck results. |
 | `!soracord logs [name]` | Fetches the last 10-15 lines of logs for a specific container. |
@@ -64,15 +66,11 @@ The default prefix is `!`.
 
 ## 📝 Configuration Note
 
-To see "Healthy" or "Unhealthy" statuses in the `!soracord docker` command, ensure your other containers have a `healthcheck` defined in their `docker-compose.yml`:
+To see "Healthy" or "Unhealthy" statuses in the `!soracord docker` , ensure your other containers have a `healthcheck` defined in their `docker-compose.yml`.
 
-```yaml
-healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-  interval: 1m
-  timeout: 10s
-  retries: 3
-
-```
-
-
+## TODO
+- [ ] Full deployment script (linux, windows, mac)
+- [ ] Landing Page website
+- [ ] Other bot support (telegram, slack, whatsapp, etc)
+- [ ] proxy container for docker accesses + write commands (maybe)
+- [ ] AI features (maybe)
